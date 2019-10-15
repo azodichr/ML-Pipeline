@@ -140,7 +140,7 @@ def main():
 	###################################
 
 	df = pd.read_csv(args.df, sep=args.sep, index_col=0)
-
+    
 	# If features  and class info are in separate files, merge them: 
 	if args.df2 != '':
 		start_dim = df.shape
@@ -454,6 +454,7 @@ def main():
 			f1_temp_array = np.insert(arr=r['f1_MC'], obj=0,
 				values=r['macro_f1'])
 			f1_array = np.append(f1_array, [f1_temp_array], axis=0)
+			#print(f1_array)
 
 	# Output for both binary and multiclass predictions
 	timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -471,6 +472,9 @@ def main():
 		accuracies_test = []
 		f1_array_test = np.array([np.insert(arr=classes.astype(np.str),
 			obj=0, values='M')])
+		#print(f1_array_test)
+		l1 =len(f1_array_test[0])
+		#print(l1)
 
 		for r_test in results_test:
 			# For binary predictions
@@ -483,10 +487,24 @@ def main():
 			if 'accuracy' in r_test:
 				accuracies_test.append(r['accuracy'])
 			if 'macro_f1' in r_test:
-				f1_temp_test_array = np.insert(arr=r_test['f1_MC'], obj=0,
-					values=r_test['macro_f1'])
-				f1_array_test = np.append(f1_array_test, [f1_temp_test_array],
-					axis=0)
+			        l2= len(r_test['f1_MC'])
+			        ### added in case test set is very low- like 1 sample in a class- will trhow an error because
+			        ### cannot calculate f1 with low number, thus if case this adds a 0 as the F1 for the class with low number
+			        if l2 != l1-1:
+			            x= l1-l2-1
+			            NAnlist=[]
+			            for i in range(x):
+			                NAnlist.append(np.nan)
+			            #r_test['f1_MC'].append(NAnlist)
+			            f1_temp_test_array = np.insert(arr=r_test['f1_MC'], obj=0,values=NAnlist)
+			            f1_temp_test_array = np.insert(f1_temp_test_array, obj=0,values=r_test['macro_f1'])
+			        else:
+			            f1_temp_test_array = np.insert(arr=r_test['f1_MC'], obj=0,values=r_test['macro_f1'])
+			        #print(r_test['f1_MC'],"f1_MC")
+			        #print(r_test['macro_f1'], "macro_f1")
+			        #print(f1_temp_test_array)
+			        f1_array_test = np.append(f1_array_test, [f1_temp_test_array], axis=0)
+			        #print(f1_array_test)
 
 ###### Multiclass Specific Output ######
 	if len(classes) > 2:

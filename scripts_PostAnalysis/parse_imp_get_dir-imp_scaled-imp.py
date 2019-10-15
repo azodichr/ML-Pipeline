@@ -10,6 +10,7 @@ NEED:
     -pos name of positive class
     -neg name of negative class
     -alg algorithm used to get importance: RF,GB,SVM,LogReg
+    -i   if classes are integers (1,0), True, else False
 '''
 
 import sys, os
@@ -40,7 +41,10 @@ def binorcont(df):
                  lista = x1[x].unique().tolist()
                  #print(x1)
                  if len(lista) == 2:
-                     if 0 and 1 in lista:
+                     lista= [int(i) for i in lista] 
+                     #print(lista)
+                     if all(x in lista for x in [1, 0]):
+                         #print(lista)
                          df0= pd.concat([df0, x1], axis=1, sort=True)
                      else:
                          df1= pd.concat([df1, x1], axis=1, sort=True)
@@ -52,7 +56,7 @@ def binorcont(df):
                      onevalue.append(x)
 
         #return binary and cont matrices            
-        print ("Number of features with only one value: ", len(onevalue), "out of ", len(list(df2.columns.values)))
+        print ("Number of features with only one value: ", len(onevalue), "out of ", len(list(df2.columns.values)), df0, df1)
         return(df0, df1)
                      
                      
@@ -69,22 +73,30 @@ def get_enrich(df, pos, neg):
         
         #get counts for each class
         df2 = df.loc[df['Class'] == pos]
+        #print (df2)
         x= df2.columns.values[i]
         #print(x)
-        x1 = df2.iloc[:,[i]].dropna(axis=0) 
-        counts= x1[x].value_counts()
+        x1 = df2.loc[:,x].dropna(axis=0) 
+        #print("dataframe ", x1)
+        counts= x1.value_counts()
+        #print("counts ", counts)
         pos1= counts.get(1)
         pos2= counts.get(0)
-        if pd.isnull(pos1) == True:
+        if pd.isnull(pos1):
             pos1= 0
-        elif pd.isnull(pos2) == True:
+        if pd.isnull(pos2):
             pos2 = 0
-        elif pos1 == 'None':
+        if pos1 is None:
             pos1= 0
-        elif pos2 == 'None':
+        if pos2 is None:
+            pos2= 0
+        if str(pos1) == 'None':
+            pos1= 0
+        if str(pos2) == 'None':
             pos2 = 0
+        
         #print(pos1, pos2)
-        totalpos= float(pos1+pos2)
+        totalpos= float(int(pos1)+int(pos2))
         df3 = df.loc[df['Class'] == neg]
         x2= df3.columns.values[i]
         x12 = df3.iloc[:,[i]].dropna(axis=0) 
@@ -93,19 +105,28 @@ def get_enrich(df, pos, neg):
         neg2= counts2.get(0)
         if pd.isnull(neg1) == True:
             neg1= 0
-        elif pd.isnull(neg2) == True:
+        if pd.isnull(neg2) == True:
             neg2 = 0
-        elif neg1 == 'None':
+        if str(neg1) == 'None':
             neg1= 0
-        elif neg2 == 'None':
+        if str(neg2) == 'None':
             neg2 = 0
-        totalneg= float(neg1+neg2)
+        if neg1 is None:
+            neg1= 0
+        if neg2 is None:
+            neg2= 0
         #print (neg1, neg2)
+        totalneg= float(int(neg1)+int(neg2))
         
         #calculate enrichment
-        
-        pos_en= (float(pos1))/totalpos
-        neg_en= (float(neg1))/totalneg
+        if totalpos == 0:
+            pos_en= 0
+        else:
+            pos_en= (float(pos1))/totalpos
+        if totalneg == 0:
+            neg_en= 0
+        else:
+            neg_en= (float(neg1))/totalneg
         if pos_en > neg_en:
             enrich = '+'
         elif pos_en < neg_en:
@@ -244,7 +265,11 @@ def get_scale(df, alg):
     dfrank= df2.rank(axis=0,method='average')
     print("ranking importance scores")
     #get row names in list
+<<<<<<< HEAD:parse_imp_get_dir-imp_scaled-imp.py
+    rows_to_norm = df2.index[0:].values.tolist()
+=======
     rows_to_norm = df2.index[1:].values.tolist()
+>>>>>>> 816a84298d7ab458f99b53b423992e31114389c7:scripts_PostAnalysis/parse_imp_get_dir-imp_scaled-imp.py
     #print(df2, rows_to_norm)
     #normalize values
     print('normalizing importance scores')
@@ -258,7 +283,7 @@ def get_scale(df, alg):
     dfr= dfr.rename(index=str, columns={"imp_score": "imp_score_rank"})
     #join dataframes
     df4= pd.DataFrame(pd.concat([df, df3, dfr], axis=1, join='inner'))
-    print(df4)
+    #print(df4)
     #get enrichment score
     if alg == 'RF' or 'GB':
         print('scaling importance score based on enrichment')
@@ -308,12 +333,22 @@ def main():
                 neg = sys.argv[i+1]
             if sys.argv[i] == "-alg":
                 alg = sys.argv[i+1]
-
+            if sys.argv[i] == "-i":
+                I = sys.argv[i+1]
 
     if len(sys.argv) <= 1:
 	    print(__doc__)
 	    exit()
-
+    
+    if I == "T":
+        pos= int(pos)
+        neg= int(neg)
+    elif I == "True":
+        pos= int(pos)
+        neg= int(neg)
+    else:
+        pass
+        
     df = pd.read_csv(DF, sep='\t', index_col = 0)
     #print(df)
     # get binary and continous matrices
@@ -321,24 +356,33 @@ def main():
     bin_df, con_df = binorcont(df)
     #print (bin_df, con_df)
     # for binary, get enrichment to determine feature direction
-    print('getting binary enrichment')
-    enrich_df= get_enrich(bin_df, pos, neg)
-    #print(enrich_df)
+    if len(con_df.columns) <= 1:
+        print(len(bin_df.columns),'getting binary enrichment')
+        enrich_df= get_enrich(bin_df, pos, neg)
+        dirdf= enrich_df.set_index('feature')
+        #print(enrich_df)
     # for continuous, get median/mean to determine feature direction
-    print('getting mean for continous data')
-    med_df= get_median(con_df, pos, neg)
-    #print(med_df)
-    
-    #print('getting correlation for continous data')
-    #med_df= get_corr(con_df, pos, neg)
-    # concatenate cont and bin directions
-    dirdf= pd.concat([enrich_df, med_df], axis=0, join='inner')
-    
-    dirdf= dirdf.set_index('feature')
+    elif len(bin_df.columns) <= 1:
+        print(len(con_df.columns),'getting mean for continous data')
+        med_df= get_median(con_df, pos, neg)
+        #print(med_df)
+        dirdf= med_df.set_index('feature')
+    else:
+        print("number of continuous features: ", len(con_df.columns))
+        print("number of binary features: ", len(bin_df.columns))
+        #     concatenate cont and bin directions
+        enrich_df= get_enrich(bin_df, pos, neg)
+        med_df= get_median(con_df, pos, neg)
+        dirdf= pd.concat([enrich_df, med_df], axis=0, join='inner')
+        dirdf= dirdf.set_index('feature')
     #print(dirdf)
     
     # add direction to importance score
+<<<<<<< HEAD:parse_imp_get_dir-imp_scaled-imp.py
+    impdf = pd.read_csv(imp, sep='\t', index_col = 0, header=None, names = ['feature', 'imp_score'])
+=======
     impdf = pd.read_csv(imp, sep='\t', index_col = 0, names = ['feature', 'imp_score'])
+>>>>>>> 816a84298d7ab458f99b53b423992e31114389c7:scripts_PostAnalysis/parse_imp_get_dir-imp_scaled-imp.py
     #print(impdf)
     #impdf= impdf.set_index('feature')
     
