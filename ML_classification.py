@@ -494,7 +494,7 @@ def main():
 			            x= l1-l2-1
 			            NAnlist=[]
 			            for i in range(x):
-			                NAnlist.append(0)
+			                NAnlist.append(np.nan)
 			            #r_test['f1_MC'].append(NAnlist)
 			            f1_temp_test_array = np.insert(arr=r_test['f1_MC'], obj=0,values=NAnlist)
 			            f1_temp_test_array = np.insert(f1_temp_test_array, obj=0,values=r_test['macro_f1'])
