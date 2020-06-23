@@ -1,3 +1,6 @@
+"""
+Adapted 05/27/2020 by Serena G. Lotreck to add treeinterpreter method
+"""
 import sys, os, argparse, time
 import pandas as pd
 import numpy as np
@@ -6,7 +9,7 @@ import ML_functions as ML
 start_total_time = time.time()
 
 def warn(*args, **kwargs):
-    pass
+	pass
 import warnings
 warnings.warn = warn
 
@@ -41,7 +44,7 @@ def main():
 	inp_group.add_argument('-feat', help='File with list of features (from x) '
 		'to include', default='all')
 
-	# Model behavior 
+	# Model behavior
 	pipln_group = parser.add_argument_group(title='CONTROL PIPELINE BEHAVIOR')
 	pipln_group.add_argument('-apply', help='Non-training Y labels that the '
 		'models should be applied to (e.g. unknown)', default='')
@@ -63,6 +66,16 @@ def main():
 		type=int, default=10)
 	pipln_group.add_argument('-cv_sets', help='File with defined cross '
 		'validation folds', default='none')
+
+	# Interpretation
+	interp_group = parser.add_argument_group(title='CONTROL INTERPRETATION BEHAVIOR')
+	interp_group.add_argument('-treeinterp',help='t/f to use treeinterpreter for '
+		'RF models', default='f')
+	# interp_group.add_argument('-joint', help='t/f to return joint feature '
+	# 	'contributions instead of independent contributions for each instance',
+	# 	default='f')
+	interp_group.add_argument('-interp_out_loc', help='path to save feature '
+		'contribution file, default is cwd',default='')
 
 	# Grid Search Method
 	gs_group = parser.add_argument_group(title='CONTROL GRID SEARCH BEHAVIOR')
@@ -133,10 +146,9 @@ def main():
 		args.max_features =args.max_features
 
 	####### Load Dataframe & Pre-process #######
-
 	df = pd.read_csv(args.df, sep=args.sep, index_col=0)
 
-	# If features  and class info are in separate files, merge them: 
+	# If features  and class info are in separate files, merge them:
 	if args.df2 != '':
 		start_dim = df.shape
 		df_class = pd.read_csv(args.df2, sep=args.sep, index_col=0)
@@ -171,7 +183,7 @@ def main():
 			quit()
 
 	# Normalize feature data (x_norm)
-	if (args.alg.lower() in ["svm", "svmpoly", "svmrbf"] or 
+	if (args.alg.lower() in ["svm", "svmpoly", "svmrbf"] or
 		args.norm.lower() in ['t', 'true']):
 		if args.norm.lower != 'force_false':
 			from sklearn import preprocessing
@@ -187,12 +199,13 @@ def main():
 			df = pd.DataFrame(X_scaled, columns=X.columns, index=X.index)
 			df.insert(loc=0, column='Y', value=y)
 
-	# Set up dataframe of unknown instances that the final models will be 
+	# Set up dataframe of unknown instances that the final models will be
 	# applied to and drop unknowns from df for model building
 	if args.apply != '':
 		df_unknowns = df[df['Y'].str.match(args.apply)]
 		predictions = pd.DataFrame(data=df['Y'], index=df.index, columns=['Y'])
 		df = df.drop(df_unknowns.index.values)
+		print(f"predictions: {predictions}")
 		print("Model trained on %i instances & applied to %i unknown instances "
 			"(see _scores for unkns)" % (len(df.index), len(df_unknowns.index)))
 	else:
@@ -207,7 +220,7 @@ def main():
 		std = df['Y'].std(axis=0)
 		df['Y'] = (df['Y'] - mean) / std
 
-	# Separte test intances from training/validation 
+	# Separte test intances from training/validation
 	if args.test != '':
 		print('Removing test instances to apply model on later...')
 		with open(args.test) as test_file:
@@ -237,7 +250,7 @@ def main():
 					"_" + args.tag)
 
 	print("Snapshot of data being used:")
-	print(df.ix[:5, :5])
+	print(df.iloc[:5, :5])
 
 	n_features = len(list(df)) - 1
 
@@ -323,12 +336,12 @@ def main():
 
 		# Run ML algorithm.
 		if args.test != '':
-			result, cv_pred, importance, result_test = ML.fun.Run_Regression_Model(
+			result, cv_pred, importance, result_test, model = ML.fun.Run_Regression_Model(
 				df, reg, args.cv_num, args.alg, df_unknowns, test_df,
 				args.cv_sets, j)
 			results_test.append(result_test)
 		else:
-			result, cv_pred, importance = ML.fun.Run_Regression_Model(
+			result, cv_pred, importance, model = ML.fun.Run_Regression_Model(
 				df, reg, args.cv_num, args.alg, df_unknowns,
 				test_df, args.cv_sets, j)
 
@@ -382,6 +395,22 @@ def main():
 		MSE_test_stats, EVS_test_stats = ['na', 'na', 'na'], ['na', 'na', 'na']
 		r2_test_stats, PCC_test_stats = ['na', 'na', 'na'], ['na', 'na', 'na']
 
+	########### Do tree interpretation (local) for RF ################
+
+	if args.treeinterp.lower() in ['true', 't']:
+		# prediction, bias, contributions = ML.fun.tree_interp(test_df,model,args.joint)
+		prediction, bias, contributions = ML.fun.tree_interp(test_df, model)
+
+		# write to output file
+		# if args.joint.lower() not in ['true', 't']:
+		# 	contrib_df = pd.DataFrame(contributions)
+		# 	print(f'Snapshot of feature contributions: {contrib_df.head()}')
+		# 	contrib_df.to_csv(args.interp_out_loc+'local_contribs.csv',index=False)
+		# else: pass
+
+		contrib_df = pd.DataFrame(contributions)
+		print(f'Snapshot of feature contributions: {contrib_df.head()}')
+		contrib_df.to_csv(args.interp_out_loc+'local_contribs.csv',index=False)
 
 	# Get average predicted value
 	pred_columns = [c for c in predictions.columns if c.startswith('rep_')]
@@ -439,7 +468,7 @@ def main():
 		'\t'.join(str(x) for x in PCC_test_stats)))
 
 
-	# Save detailed results file 
+	# Save detailed results file
 	with open(args.save + "_results.txt", 'w') as out:
 		out.write('%s\nID: %s\nTag: %s\nPredicting: %s\nAlgorithm: %s\nNumber'
 		' of Instances: %s\nNumber of features: %i\n' % (

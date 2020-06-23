@@ -3,6 +3,7 @@ PURPOSE: Functions for Shiu Lab ML-Pipeline
 
 """
 import sys
+sys.path.append('../SLfork_treeinterpreter')
 import pandas as pd
 import numpy as np
 import time
@@ -113,7 +114,7 @@ class fun(object):
 		parameters = fun.param_space(ALG, GS_TYPE, n_iter)
 
 		gs_results = pd.DataFrame(columns=['mean_test_score', 'params'])
-		
+
 		bal_ids_list = []
 		for j in range(n):
 			# Build balanced dataframe and define x & y
@@ -121,14 +122,14 @@ class fun(object):
 			for cl in classes:
 				temp = df[df['Class'] == cl].sample(min_size, random_state=j)
 				df1 = pd.concat([df1, temp])
-			
+
 			bal_ids_list.append(list(df1.index))
 
 			if j < GS_REPS:
 				print("Round %s of %s"%(j+1,GS_REPS))
 				y = df1['Class']
 				x = df1.drop(['Class'], axis=1)
-				
+
 				# Build model, run grid search 10-fold CV, and fit
 				if ALG.lower() == 'rf':
 					from sklearn.ensemble import RandomForestClassifier
@@ -146,7 +147,7 @@ class fun(object):
 				elif ALG.lower() == "gb":
 					from sklearn.ensemble import GradientBoostingClassifier
 					model = GradientBoostingClassifier()
-				
+
 				if gs_score.lower() == 'auprc':
 					gs_score = 'average_precision'
 
@@ -159,17 +160,17 @@ class fun(object):
 					grid_search = GridSearchCV(model, param_grid=parameters,
 						scoring=gs_score, cv=cv_num, n_jobs=n_jobs,
 						pre_dispatch=2 * n_jobs, return_train_score=True)
-				
+
 				if len(classes) == 2:
 					y = y.replace(to_replace=[POS, NEG], value=[1, 0])
-				
+
 				grid_search.fit(x, y)
-				
+
 				# Add results to dataframe
 				j_results = pd.DataFrame(grid_search.cv_results_)
 				gs_results = pd.concat([gs_results, j_results[['params',
 					'mean_test_score']]])
-			
+
 		# Break params into seperate columns
 		gs_results2 = pd.concat([gs_results.drop(['params'], axis=1),
 			gs_results['params'].apply(pd.Series)], axis=1)
@@ -177,7 +178,7 @@ class fun(object):
 
 		if gs_full.lower() == 't' or gs_full.lower() == 'true':
 			gs_results2.to_csv(SAVE + "_GridSearchFULL.txt")
-		
+
 		# Find the mean score for each set of parameters & select the top set
 		gs_results_mean = gs_results2.groupby(param_names).mean()
 		gs_results_mean = gs_results_mean.sort_values('mean_test_score', 0,
@@ -192,10 +193,10 @@ class fun(object):
 		gs_results_mean.to_csv(outName)
 		outName.close()
 		return top_params,bal_ids_list, param_names
-	
+
 	def RegGridSearch(df, SAVE, ALG, gs_score, n, cv_num, n_jobs, GS_REPS,
 		GS_TYPE, gs_full):
-		""" Perform a parameter sweep using GridSearchCV from SK-learn. 
+		""" Perform a parameter sweep using GridSearchCV from SK-learn.
 		Need to edit the hard code to modify what parameters are searched"""
 		from sklearn.metrics import mean_squared_error, r2_score
 		from sklearn.model_selection import GridSearchCV
@@ -244,23 +245,23 @@ class fun(object):
 			j_results = pd.DataFrame(grid_search.cv_results_)
 			gs_results = pd.concat([gs_results, j_results[['params',
 				'mean_test_score']]])
-		
+
 		# Break params into seperate columns
 		gs_results2 = pd.concat([gs_results.drop(['params'], axis=1),
 			gs_results['params'].apply(pd.Series)], axis=1)
-		
+
 		if gs_full.lower() == 't' or gs_full.lower() == 'true':
 			gs_results.to_csv(SAVE + "_GridSearchFULL.txt")
 		param_names = list(gs_results2)[1:]
 		#print('Parameters tested: %s' % param_names)
-		
+
 		# Find the mean score for each set of parameters & select the top set
 		gs_results_mean = gs_results2.groupby(param_names).mean()
 		gs_results_mean = gs_results_mean.sort_values('mean_test_score',
 			0, ascending=False)
 		top_params = gs_results_mean.index[0]
 		print(gs_results_mean.head())
-		
+
 		# Save grid search results
 		print("Parameter sweep time: %f seconds" % (time.time() - start_time))
 		outName = open(SAVE + "_GridSearch.txt", 'w')
@@ -269,7 +270,7 @@ class fun(object):
 		outName.close()
 		return top_params, param_names
 
-	
+
 
 	def DefineClf_RandomForest(n_estimators, max_depth, max_features, j, n_jobs):
 		from sklearn.ensemble import RandomForestClassifier
@@ -280,7 +281,7 @@ class fun(object):
 			random_state=j,
 			n_jobs=n_jobs)
 		return clf
-	
+
 	def DefineReg_RandomForest(n_estimators, max_depth, max_features, n_jobs, j):
 		from sklearn.ensemble import RandomForestRegressor
 		reg = RandomForestRegressor(n_estimators=int(n_estimators),
@@ -291,7 +292,7 @@ class fun(object):
 			n_jobs=n_jobs)
 		return reg
 
-	def DefineReg_GB(n_estimators, learning_rate, max_features, max_depth, 
+	def DefineReg_GB(n_estimators, learning_rate, max_features, max_depth,
 		n_jobs, j):
 		from sklearn.ensemble import GradientBoostingRegressor
 		reg = GradientBoostingRegressor(loss='ls',
@@ -330,7 +331,7 @@ class fun(object):
 			degree=degree,
 			gamma=gamma)
 		return reg
-	
+
 	def DefineClf_LinearSVM(C, j):
 		from sklearn.svm import LinearSVC
 		clf = LinearSVC(C=float(C), random_state=j)
@@ -378,7 +379,7 @@ class fun(object):
 			method='predict_proba')
 		cv_pred = cross_val_predict(estimator=clf, X=X, y=y, cv=cv_num)
 
-		# Fit a model using all data and apply to 
+		# Fit a model using all data and apply to
 		# (1) instances that were not selected using cl_train
 		# (2) instances with unknown class
 		# (3) test instances
@@ -407,7 +408,7 @@ class fun(object):
 
 			#Generate data frame with all scores
 			score_columns=["score_%s"%(j)]
-			df_sel_scores = pd.DataFrame(data=cv_proba[:, POS_IND], 
+			df_sel_scores = pd.DataFrame(data=cv_proba[:, POS_IND],
 				index=df.index, columns=score_columns)
 			df_notSel_scores = pd.DataFrame(data=notSel_proba[:,POS_IND],
 				index=df_notSel.index, columns=score_columns)
@@ -515,7 +516,7 @@ class fun(object):
 			cor_test = np.corrcoef(np.array(test_y), test_pred)
 			result_test = [mse_test, evs_test, r2_test, cor_test[0, 1]]
 
-		# Try to extract importance scores 
+		# Try to extract importance scores
 		try:
 			importances = reg.feature_importances_
 		except:
@@ -526,15 +527,15 @@ class fun(object):
 				print("Cannot get importance scores")
 
 		if not isinstance(test_df, str):
-			return result, cv_pred_df, importances, result_test
+			return result, cv_pred_df, importances, result_test, reg
 		else:
-			return result, cv_pred_df, importances
+			return result, cv_pred_df, importances, reg
 
 	def Performance(y, cv_pred, scores, clf, clf2, classes, POS, POS_IND,
 		NEG, ALG, THRSHD_test):
 		""" For binary predictions: This function calculates the best threshold
 		for defining POS/NEG from the prediction probabilities by maximizing
-		the f1_score. Then calcuates the area under the ROC and PRc 
+		the f1_score. Then calcuates the area under the ROC and PRc
 		"""
 		from sklearn.metrics import f1_score, roc_auc_score, accuracy_score
 		from sklearn.metrics import average_precision_score, confusion_matrix
@@ -574,7 +575,7 @@ class fun(object):
 		AucRoc = roc_auc_score(y1, scores)
 		AucPRc = average_precision_score(y1, scores)
 
-		# Try to extract importance scores 
+		# Try to extract importance scores
 		if clf2 != 'pass':
 			clf = clf2
 		try:
@@ -586,7 +587,7 @@ class fun(object):
 				importances = "na"
 				print("Cannot get importance scores")
 
-		return {'cm': cm, 'threshold': max_f1_thresh, 'AucPRc': AucPRc, 
+		return {'cm': cm, 'threshold': max_f1_thresh, 'AucPRc': AucPRc,
 			'AucRoc': AucRoc, 'MaxF1': max_f1, 'importances': importances}
 
 	def Performance_MC(y, cv_pred, classes):
@@ -683,7 +684,7 @@ class fun(object):
 		precisions = {}
 
 		# For each balanced dataset
-		for i in range(0, n): 
+		for i in range(0, n):
 			FPR = []
 			TPR = []
 			precis = []
@@ -711,7 +712,7 @@ class fun(object):
 		TPRs_df = pd.DataFrame.from_dict(TPRs, orient='columns')
 		precisions_df = pd.DataFrame.from_dict(precisions, orient='columns')
 
-		# Get summary stats 
+		# Get summary stats
 		FPR_mean = FPRs_df.mean(axis=1)
 		FPR_sd = FPRs_df.std(axis=1)
 		TPR_mean = TPRs_df.mean(axis=1)
@@ -796,3 +797,35 @@ class fun(object):
 		plt.savefig(filename, format='pdf')
 
 		return 'Confusion matrix plotted.'
+
+	def tree_interp(test_df,model):
+		"""
+		call treeinterpreter for RF model.
+
+		parameters:
+			test_df, df: dataframe of test instances
+			model: trained rf regression or classification model from sklearn
+			joint, str: t/f, whether to get joint feature contributions or not
+				PUT BACK IN WHEN YOU ENABLE THIS FEATURE
+
+		returns: prediction, bias, contributions
+		"""
+		from treeinterpreter import treeinterpreter_adapted as ti
+
+		# drop Y to format test data for ti
+		test_X = test_df.drop(['Y'], axis=1)
+
+		# get contributions
+		# if joint.lower() in ['true', 't']:
+		# 	print('===> Calculating joint feature contributions <===')
+		# 	prediction, bias, contributions = ti.predict(model,test_X,
+		# 	joint_contribution=True)
+
+
+		# else:
+		print('===> Calculating independent feature contributions <===')
+			# prediction, bias, contributions = ti.predict(model,test_X,
+			# joint_contribution=False)
+		prediction, bias, contributions = ti.predict(model,test_X)
+
+		return prediction, bias, contributions
