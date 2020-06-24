@@ -399,7 +399,7 @@ def main():
 
 	if args.treeinterp.lower() in ['true', 't']:
 		# prediction, bias, contributions = ML.fun.tree_interp(test_df,model,args.joint)
-		prediction, bias, contributions = ML.fun.tree_interp(test_df, model)
+		prediction, bias, contrib_df = ML.fun.tree_interp(test_df, model)
 
 		# write to output file
 		# if args.joint.lower() not in ['true', 't']:
@@ -408,7 +408,6 @@ def main():
 		# 	contrib_df.to_csv(args.interp_out_loc+'local_contribs.csv',index=False)
 		# else: pass
 
-		contrib_df = pd.DataFrame(contributions)
 		print(f'Snapshot of feature contributions: {contrib_df.head()}')
 		contrib_df.to_csv(args.interp_out_loc+'local_contribs.csv',index=False)
 
