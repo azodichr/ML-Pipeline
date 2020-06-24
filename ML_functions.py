@@ -826,6 +826,6 @@ class fun(object):
 		print('===> Calculating independent feature contributions <===')
 			# prediction, bias, contributions = ti.predict(model,test_X,
 			# joint_contribution=False)
-		prediction, bias, contrib_df = ti.predict(model,test_X)
+		prediction, bias, contributions = ti.predict(model,test_X)
 
-		return prediction, bias, contrib_df
+		return prediction, bias, contributions
