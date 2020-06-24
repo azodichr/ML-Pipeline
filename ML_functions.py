@@ -800,7 +800,9 @@ class fun(object):
 
 	def tree_interp(test_df,model):
 		"""
-		call treeinterpreter for RF model.
+		Call treeinterpreter for RF model and build dataframe with output.
+
+		ONLY WORKS FOR REGRESSION
 
 		parameters:
 			test_df, df: dataframe of test instances
@@ -808,24 +810,38 @@ class fun(object):
 			joint, str: t/f, whether to get joint feature contributions or not
 				PUT BACK IN WHEN YOU ENABLE THIS FEATURE
 
-		returns: prediction, bias, contributions
+		returns: a dataframe with the sampleID, label, bias, prediction and
+		contributions for all features, for each instance
 		"""
-		from treeinterpreter import treeinterpreter_adapted as ti
+		from treeinterpreter import treeinterpreter as ti
+		print(f'test_df index: {test_df.index}')
+		# put labels, ID in contribution dataframe
+		interp_df_half = test_df['Y'].to_frame()
+		interp_df_half.set_index(test_df.index)
 
+		# get feature names to use as col names for contributions
+		test_featureNames = test_df.columns.values.tolist()
+		test_featureNames = test_featureNames[1:]
+		print(f'Feature names: {test_featureNames}\n')
+
+		print('===> Calculating independent feature contributions <===')
 		# drop Y to format test data for ti
 		test_X = test_df.drop(['Y'], axis=1)
-
-		# get contributions
-		# if joint.lower() in ['true', 't']:
-		# 	print('===> Calculating joint feature contributions <===')
-		# 	prediction, bias, contributions = ti.predict(model,test_X,
-		# 	joint_contribution=True)
-
-
-		# else:
-		print('===> Calculating independent feature contributions <===')
-			# prediction, bias, contributions = ti.predict(model,test_X,
-			# joint_contribution=False)
+		# call ti
 		prediction, bias, contributions = ti.predict(model,test_X)
 
-		return prediction, bias, contributions
+		# add results to contribution df
+		interp_df_half['bias'] = bias.tolist()
+		interp_df_half['prediction'] = prediction.flatten().tolist()
+
+		print(f'interp_df_half: {interp_df_half.head()}')
+
+		# make df of contributions and all other columns to concatanate
+		contrib_df = pd.DataFrame(contributions,index = test_df.index,columns=test_featureNames)
+
+		# make df where columns are ID, label, bias, prediction, contributions
+		local_interp_df = pd.concat([interp_df_half, contrib_df], axis=1)
+
+		print(f'Snapshot of the interpretation dataframe: {local_interp_df.head()}')
+
+		return local_interp_df

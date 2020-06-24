@@ -398,19 +398,11 @@ def main():
 	########### Do tree interpretation (local) for RF ################
 
 	if args.treeinterp.lower() in ['true', 't']:
-		# prediction, bias, contributions = ML.fun.tree_interp(test_df,model,args.joint)
-		prediction, bias, contributions = ML.fun.tree_interp(test_df, model)
+		contrib_df = ML.fun.tree_interp(test_df, model)
 
-		# write to output file
-		# if args.joint.lower() not in ['true', 't']:
-		# 	contrib_df = pd.DataFrame(contributions)
-		# 	print(f'Snapshot of feature contributions: {contrib_df.head()}')
-		# 	contrib_df.to_csv(args.interp_out_loc+'local_contribs.csv',index=False)
-		# else: pass
-
-		contrib_df = pd.DataFrame(contributions)
-		print(f'Snapshot of feature contributions: {contrib_df.head()}')
 		contrib_df.to_csv(args.interp_out_loc+'local_contribs.csv',index=False)
+
+	#######################################################################
 
 	# Get average predicted value
 	pred_columns = [c for c in predictions.columns if c.startswith('rep_')]
