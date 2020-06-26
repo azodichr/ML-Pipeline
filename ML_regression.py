@@ -251,6 +251,7 @@ def main():
 
 	print("Snapshot of data being used:")
 	print(df.iloc[:5, :5])
+	print(f'\nNumber of features: {len(df.columns.values.tolist())-1}')
 
 	n_features = len(list(df)) - 1
 
@@ -403,7 +404,7 @@ def main():
 			print(f'Interpretation matrix will be saved as {args.interp_out_loc+"local_contribs.csv"}')
 			contrib_df.to_csv(args.interp_out_loc+'local_contribs.csv',index=True)
 		else:
-			print(f'Interpretation matrix will be saved as {args.interp_out_loc+"/local_contribs.csv"}')
+			print(f'\n\nInterpretation matrix will be saved as {args.interp_out_loc+"/local_contribs.csv"}')
 			contrib_df.to_csv(args.interp_out_loc+'/local_contribs.csv',index=True)
 
 	#######################################################################

@@ -814,7 +814,7 @@ class fun(object):
 		contributions for all features, for each instance
 		"""
 		from treeinterpreter import treeinterpreter as ti
-		
+
 		# put labels, ID in contribution dataframe
 		interp_df_half = test_df['Y'].to_frame()
 		interp_df_half.set_index(test_df.index)
@@ -823,7 +823,7 @@ class fun(object):
 		test_featureNames = test_df.columns.values.tolist()
 		test_featureNames = test_featureNames[1:]
 
-		print('===> Calculating independent feature contributions <===')
+		print('\n\n===> Calculating independent feature contributions <===')
 		# drop Y to format test data for ti
 		test_X = test_df.drop(['Y'], axis=1)
 		# call ti
