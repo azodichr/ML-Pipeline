@@ -399,8 +399,12 @@ def main():
 
 	if args.treeinterp.lower() in ['true', 't']:
 		contrib_df = ML.fun.tree_interp(test_df, model)
-
-		contrib_df.to_csv(args.interp_out_loc+'local_contribs.csv',index=False)
+		if args.interp_out_loc[-1] == '/':
+			print(f'Interpretation matrix will be saved as {args.interp_out_loc+"local_contribs.csv"}')
+			contrib_df.to_csv(args.interp_out_loc+'local_contribs.csv',index=True)
+		else:
+			print(f'Interpretation matrix will be saved as {args.interp_out_loc+"/local_contribs.csv"}')
+			contrib_df.to_csv(args.interp_out_loc+'/local_contribs.csv',index=True)
 
 	#######################################################################
 

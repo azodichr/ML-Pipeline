@@ -814,7 +814,7 @@ class fun(object):
 		contributions for all features, for each instance
 		"""
 		from treeinterpreter import treeinterpreter as ti
-		print(f'test_df index: {test_df.index}')
+		
 		# put labels, ID in contribution dataframe
 		interp_df_half = test_df['Y'].to_frame()
 		interp_df_half.set_index(test_df.index)
@@ -822,7 +822,6 @@ class fun(object):
 		# get feature names to use as col names for contributions
 		test_featureNames = test_df.columns.values.tolist()
 		test_featureNames = test_featureNames[1:]
-		print(f'Feature names: {test_featureNames}\n')
 
 		print('===> Calculating independent feature contributions <===')
 		# drop Y to format test data for ti
@@ -834,10 +833,9 @@ class fun(object):
 		interp_df_half['bias'] = bias.tolist()
 		interp_df_half['prediction'] = prediction.flatten().tolist()
 
-		print(f'interp_df_half: {interp_df_half.head()}')
-
 		# make df of contributions and all other columns to concatanate
-		contrib_df = pd.DataFrame(contributions,index = test_df.index,columns=test_featureNames)
+		contrib_df = pd.DataFrame(contributions,index = test_df.index,
+							columns=test_featureNames)
 
 		# make df where columns are ID, label, bias, prediction, contributions
 		local_interp_df = pd.concat([interp_df_half, contrib_df], axis=1)
