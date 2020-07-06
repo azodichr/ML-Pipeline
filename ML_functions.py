@@ -626,7 +626,7 @@ class fun(object):
 
 			# Get y and yhat for instances that were in the balanced dataset
 			y = df_proba_thresh.loc[balanced_ids[balanced_count], 'Class']
-			yhat = df_proba_thresh.iloc[balanced_ids[balanced_count], i]
+			yhat = df_proba_thresh.loc[balanced_ids[balanced_count], i]
 			balanced_count += 1
 
 			matrix = confusion_matrix(y, yhat, labels=[POS, NEG])
