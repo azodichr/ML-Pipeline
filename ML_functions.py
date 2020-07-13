@@ -3,7 +3,6 @@ PURPOSE: Functions for Shiu Lab ML-Pipeline
 
 """
 import sys
-sys.path.append('../SLfork_treeinterpreter')
 import pandas as pd
 import numpy as np
 import time
@@ -802,7 +801,7 @@ class fun(object):
 		"""
 		Call treeinterpreter for RF model and build dataframe with output.
 
-		ONLY WORKS FOR REGRESSION
+		ONLY WORKS FOR INDEP CONTRIBS FOR REGRESSION
 
 		parameters:
 			test_df, df: dataframe of test instances
