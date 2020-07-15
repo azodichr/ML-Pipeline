@@ -41,7 +41,7 @@ def main():
 	inp_group.add_argument('-feat', help='File with list of features (from x) '
 		'to include', default='all')
 
-	# Model behavior 
+	# Model behavior
 	pipln_group = parser.add_argument_group(title='CONTROL PIPELINE BEHAVIOR')
 	pipln_group.add_argument('-apply', help='Non-training Y labels that the '
 		'models should be applied to (e.g. unknown)', default='')
@@ -136,7 +136,7 @@ def main():
 
 	df = pd.read_csv(args.df, sep=args.sep, index_col=0)
 
-	# If features  and class info are in separate files, merge them: 
+	# If features  and class info are in separate files, merge them:
 	if args.df2 != '':
 		start_dim = df.shape
 		df_class = pd.read_csv(args.df2, sep=args.sep, index_col=0)
@@ -171,7 +171,7 @@ def main():
 			quit()
 
 	# Normalize feature data (x_norm)
-	if (args.alg.lower() in ["svm", "svmpoly", "svmrbf"] or 
+	if (args.alg.lower() in ["svm", "svmpoly", "svmrbf"] or
 		args.norm.lower() in ['t', 'true']):
 		if args.norm.lower != 'force_false':
 			from sklearn import preprocessing
@@ -187,7 +187,7 @@ def main():
 			df = pd.DataFrame(X_scaled, columns=X.columns, index=X.index)
 			df.insert(loc=0, column='Y', value=y)
 
-	# Set up dataframe of unknown instances that the final models will be 
+	# Set up dataframe of unknown instances that the final models will be
 	# applied to and drop unknowns from df for model building
 	if args.apply != '':
 		df_unknowns = df[df['Y'].str.match(args.apply)]
@@ -207,7 +207,7 @@ def main():
 		std = df['Y'].std(axis=0)
 		df['Y'] = (df['Y'] - mean) / std
 
-	# Separte test intances from training/validation 
+	# Separte test intances from training/validation
 	if args.test != '':
 		print('Removing test instances to apply model on later...')
 		with open(args.test) as test_file:
@@ -325,12 +325,12 @@ def main():
 		if args.test != '':
 			result, cv_pred, importance, result_test = ML.fun.Run_Regression_Model(
 				df, reg, args.cv_num, args.alg, df_unknowns, test_df,
-				args.cv_sets, j)
+				args.cv_sets, j, args.save)
 			results_test.append(result_test)
 		else:
 			result, cv_pred, importance = ML.fun.Run_Regression_Model(
 				df, reg, args.cv_num, args.alg, df_unknowns,
-				test_df, args.cv_sets, j)
+				test_df, args.cv_sets, j, args.save)
 
 		results.append(result)
 		predictions[rep_name] = cv_pred
@@ -439,7 +439,7 @@ def main():
 		'\t'.join(str(x) for x in PCC_test_stats)))
 
 
-	# Save detailed results file 
+	# Save detailed results file
 	with open(args.save + "_results.txt", 'w') as out:
 		out.write('%s\nID: %s\nTag: %s\nPredicting: %s\nAlgorithm: %s\nNumber'
 		' of Instances: %s\nNumber of features: %i\n' % (
