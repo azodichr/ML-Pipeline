@@ -1,3 +1,6 @@
+"""
+Adapted 05/27/2020 by Serena G. Lotreck to add treeinterpreter method
+"""
 import sys, os, argparse, time
 import pandas as pd
 import numpy as np
@@ -6,7 +9,7 @@ import ML_functions as ML
 start_total_time = time.time()
 
 def warn(*args, **kwargs):
-    pass
+	pass
 import warnings
 warnings.warn = warn
 
@@ -63,6 +66,16 @@ def main():
 		type=int, default=10)
 	pipln_group.add_argument('-cv_sets', help='File with defined cross '
 		'validation folds', default='none')
+
+	# Interpretation
+	interp_group = parser.add_argument_group(title='CONTROL INTERPRETATION BEHAVIOR')
+	interp_group.add_argument('-treeinterp',help='t/f to use treeinterpreter for '
+		'RF models', default='f')
+	# interp_group.add_argument('-joint', help='t/f to return joint feature '
+	# 	'contributions instead of independent contributions for each instance',
+	# 	default='f')
+	interp_group.add_argument('-interp_out_loc', help='path to save feature '
+		'contribution file, default is cwd',default='')
 
 	# Grid Search Method
 	gs_group = parser.add_argument_group(title='CONTROL GRID SEARCH BEHAVIOR')
@@ -133,7 +146,6 @@ def main():
 		args.max_features =args.max_features
 
 	####### Load Dataframe & Pre-process #######
-
 	df = pd.read_csv(args.df, sep=args.sep, index_col=0)
 
 	# If features  and class info are in separate files, merge them:
@@ -193,6 +205,7 @@ def main():
 		df_unknowns = df[df['Y'].str.match(args.apply)]
 		predictions = pd.DataFrame(data=df['Y'], index=df.index, columns=['Y'])
 		df = df.drop(df_unknowns.index.values)
+		print(f"predictions: {predictions}")
 		print("Model trained on %i instances & applied to %i unknown instances "
 			"(see _scores for unkns)" % (len(df.index), len(df_unknowns.index)))
 	else:
@@ -238,6 +251,8 @@ def main():
 
 	print("Snapshot of data being used:")
 	print(df.iloc[:5, :5])
+	print(f'\nNumber of features: {len(df.columns.values.tolist())-1}')
+
 
 	n_features = len(list(df)) - 1
 
@@ -323,12 +338,12 @@ def main():
 
 		# Run ML algorithm.
 		if args.test != '':
-			result, cv_pred, importance, result_test = ML.fun.Run_Regression_Model(
+			result, cv_pred, importance, result_test, model = ML.fun.Run_Regression_Model(
 				df, reg, args.cv_num, args.alg, df_unknowns, test_df,
 				args.cv_sets, j, args.save)
 			results_test.append(result_test)
 		else:
-			result, cv_pred, importance = ML.fun.Run_Regression_Model(
+			result, cv_pred, importance, model = ML.fun.Run_Regression_Model(
 				df, reg, args.cv_num, args.alg, df_unknowns,
 				test_df, args.cv_sets, j, args.save)
 
@@ -382,6 +397,18 @@ def main():
 		MSE_test_stats, EVS_test_stats = ['na', 'na', 'na'], ['na', 'na', 'na']
 		r2_test_stats, PCC_test_stats = ['na', 'na', 'na'], ['na', 'na', 'na']
 
+	########### Do tree interpretation (local) for RF ################
+
+	if args.treeinterp.lower() in ['true', 't']:
+		contrib_df = ML.fun.tree_interp(test_df, model)
+		if args.interp_out_loc[-1] == '/':
+			print(f'Interpretation matrix will be saved as {args.interp_out_loc+"local_contribs.csv"}')
+			contrib_df.to_csv(args.interp_out_loc+'local_contribs.csv',index=True)
+		else:
+			print(f'\n\nInterpretation matrix will be saved as {args.interp_out_loc+"/local_contribs.csv"}')
+			contrib_df.to_csv(args.interp_out_loc+'/local_contribs.csv',index=True)
+
+	#######################################################################
 
 	# Get average predicted value
 	pred_columns = [c for c in predictions.columns if c.startswith('rep_')]
