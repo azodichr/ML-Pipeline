@@ -8,6 +8,7 @@ import numpy as np
 import time
 import random as rn
 import math
+from joblib import dump
 
 class fun(object):
 	def __init__(self, filename):
@@ -354,7 +355,7 @@ class fun(object):
 		return reg
 
 	def BuildModel_Apply_Performance(df, clf, cv_num, df_notSel, apply_unk,
-		df_unknowns, test_df, classes, POS, NEG, j, ALG, THRSHD_test):
+		df_unknowns, test_df, classes, POS, NEG, j, ALG, THRSHD_test, save):
 		from sklearn.model_selection import cross_val_predict
 
 		# Data from balanced dataframe
@@ -383,6 +384,10 @@ class fun(object):
 		# (2) instances with unknown class
 		# (3) test instances
 		clf.fit(X,y)
+
+		# Save model for future persistence
+		print(f'\nSaving model as {save+".joblib"}\n')
+		dump(clf, save+'.joblib')
 
 		notSel_proba = clf.predict_proba(df_notSel.drop(['Class'], axis=1))
 		if apply_unk == True:
@@ -462,7 +467,7 @@ class fun(object):
 			return result,current_scores
 
 	def Run_Regression_Model(df, reg, cv_num, ALG, df_unknowns, test_df,
-		cv_sets, j):
+		cv_sets, j, save):
 		from sklearn.model_selection import cross_val_predict
 		from sklearn.metrics.scorer import make_scorer
 		from sklearn.metrics import mean_squared_error, r2_score
@@ -493,6 +498,10 @@ class fun(object):
 		result = [mse, evs, r2, cor[0, 1]]
 
 		reg.fit(X, y)
+
+		# Save the model for future persistence
+		print(f'\nSaving model as {save+".joblib"}\n')
+		dump(reg, save+'.joblib')
 
 		# Apply fit model to unknowns
 		if isinstance(df_unknowns, pd.DataFrame):

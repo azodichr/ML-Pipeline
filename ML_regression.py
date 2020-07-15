@@ -253,6 +253,7 @@ def main():
 	print(df.iloc[:5, :5])
 	print(f'\nNumber of features: {len(df.columns.values.tolist())-1}')
 
+
 	n_features = len(list(df)) - 1
 
 	####### Run parameter sweep using a grid search #######
@@ -339,12 +340,12 @@ def main():
 		if args.test != '':
 			result, cv_pred, importance, result_test, model = ML.fun.Run_Regression_Model(
 				df, reg, args.cv_num, args.alg, df_unknowns, test_df,
-				args.cv_sets, j)
+				args.cv_sets, j, args.save)
 			results_test.append(result_test)
 		else:
 			result, cv_pred, importance, model = ML.fun.Run_Regression_Model(
 				df, reg, args.cv_num, args.alg, df_unknowns,
-				test_df, args.cv_sets, j)
+				test_df, args.cv_sets, j, args.save)
 
 		results.append(result)
 		predictions[rep_name] = cv_pred
