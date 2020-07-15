@@ -385,6 +385,8 @@ class fun(object):
 		# (3) test instances
 		clf.fit(X,y)
 
+		# Save model for future persistence
+		print(f'\nSaving model as {save+".joblib"}\n')
 		dump(clf, save+'.joblib')
 
 		notSel_proba = clf.predict_proba(df_notSel.drop(['Class'], axis=1))
@@ -498,6 +500,7 @@ class fun(object):
 		reg.fit(X, y)
 
 		# Save the model for future persistence
+		print(f'\nSaving model as {save+".joblib"}\n')
 		dump(reg, save+'.joblib')
 
 		# Apply fit model to unknowns
