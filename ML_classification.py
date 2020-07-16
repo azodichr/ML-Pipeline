@@ -42,7 +42,7 @@ def main():
 	inp_group.add_argument('-feat', help='File with list of features (from x) '
 		'to include', default='all')
 
-	# Model behavior 
+	# Model behavior
 	pipln_group = parser.add_argument_group(title='CONTROL PIPELINE BEHAVIOR')
 	pipln_group.add_argument('-cl_train', help='Classes to include in training.'
 		'If binary, first listed = pos.', default='all')
@@ -120,7 +120,7 @@ def main():
 		parser.print_help()
 		sys.exit(0)
 	args = parser.parse_args()
-	
+
 	# Complex transformations of input parameters
 	if ',' in args.cl_train:
 		args.cl_train = args.cl_train.strip().split(',')
@@ -140,8 +140,8 @@ def main():
 	###################################
 
 	df = pd.read_csv(args.df, sep=args.sep, index_col=0)
-    
-	# If features  and class info are in separate files, merge them: 
+
+	# If features  and class info are in separate files, merge them:
 	if args.df2 != '':
 		start_dim = df.shape
 		df_class = pd.read_csv(args.df2, sep=args.sep, index_col=0)
@@ -186,7 +186,7 @@ def main():
 			df.insert(loc=0, column='Class', value=y)
 
 
-	# Set up dataframe of unknown instances that the final models will be 
+	# Set up dataframe of unknown instances that the final models will be
 	# applied to and drop unknowns from df for model building
 	if args.cl_train != 'all' and '' not in args.apply:
 		apply_unk = True
@@ -203,7 +203,7 @@ def main():
 	if args.cl_train != 'all':
 		df = df[(df['Class'].isin(args.cl_train))]
 
-	# Separte test intances from training/validation 
+	# Separte test intances from training/validation
 	if args.test !='':
 		df_all = df.copy()
 		print('Removing test instances to apply model on later...')
@@ -222,7 +222,7 @@ def main():
 		test_instances = 'None'
 		df_all = df.copy()
 
-	# Generate training classes list. If binary, establish POS and NEG classes. 
+	# Generate training classes list. If binary, establish POS and NEG classes.
 	# Set grid search scoring: roc_auc for binary, f1_macro for multiclass
 	if args.cl_train == 'all':
 		classes = df['Class'].unique()
@@ -308,7 +308,7 @@ def main():
 		elif args.alg.lower() == "logreg":
 			args.C, args.intercept_scaling, args.penalty = params2use
 			print("Parameters selected: penalty=%s, C=%s, intercept_scaling="
-				"%s" % (str(args.penalty), str(args.C), 
+				"%s" % (str(args.penalty), str(args.C),
 					str(args.intercept_scaling)))
 
 		elif args.alg.lower() == "gb":
@@ -392,12 +392,12 @@ def main():
 			result, current_scores, result_test = \
 				ML.fun.BuildModel_Apply_Performance(df1, clf, args.cv_num,
 					df_notSel, apply_unk, df_unknowns, test_df, classes,
-					args.pos, NEG, j, args.alg, args.threshold_test)
+					args.pos, NEG, j, args.alg, args.threshold_test, args.save)
 			results_test.append(result_test)
 		else:
 			result, current_scores = ML.fun.BuildModel_Apply_Performance(df1,
 				clf, args.cv_num, df_notSel, apply_unk, df_unknowns, test_df,
-				classes, args.pos, NEG, j, args.alg, args.threshold_test)
+				classes, args.pos, NEG, j, args.alg, args.threshold_test, args.save)
 
 		results.append(result)
 		try:
@@ -529,14 +529,14 @@ def main():
 			df_proba.insert(loc=1, column=class_nm + '_score_Median',
 				value=df_proba[class_proba_cols].median(axis=1))
 
-		# Find the max mc_score and set to Prediction column 
+		# Find the max mc_score and set to Prediction column
 		# (remove the _score_Median string)
 		df_proba.insert(loc=1, column='Prediction',
 			value=df_proba[mc_score_columns].idxmax(axis=1))
 		df_proba['Prediction'] = \
 			df_proba.Prediction.str.replace('_score_Median', '')
 
-		# Count the # of times an instance of class x is predicted as class y 		
+		# Count the # of times an instance of class x is predicted as class y
 		summary_df_proba = df_proba[['Class', 'Prediction',
 			class_nm + '_score_Median']].groupby(['Class',
 				'Prediction']).agg('count').unstack(level=1)
@@ -586,7 +586,7 @@ def main():
 			f1_test.columns = f1_test.iloc[0]
 			f1_test = f1_test[1:]
 			f1_test.columns = [str(col) + '_F1' for col in f1_test.columns]
-			f1_test = f1_test.astype(float)	
+			f1_test = f1_test.astype(float)
 			AC_test = np.mean(accuracies_test)
 			AC_std_test = np.std(accuracies_test)
 			MacF1_test = f1_test['M_F1'].mean()
@@ -595,7 +595,7 @@ def main():
 				"stdev %03f)\nF1 (macro): %03f (+/- stdev %03f)\n" % (
 				AC_test, AC_std_test, MacF1_test, MacF1_std_test))
 
-		# Save detailed results file 
+		# Save detailed results file
 		with open(args.save + "_results.txt", 'w') as out:
 			out.write('%s\nID: %s\nTag: %s\nAlgorithm: %s\nTrained on classes: '
 				'%s\nApplied to: %s\nNumber of features: %i\n' % (
@@ -661,7 +661,7 @@ def main():
 		df_proba[Pred_name] = np.where(df_proba['Mean'] >= final_threshold,
 			args.pos, NEG)
 
-		# Summarize % of each class predicted as POS and NEG		
+		# Summarize % of each class predicted as POS and NEG
 		summary_df_proba = df_proba[['Class', Pred_name, 'Mean']].groupby([
 			'Class', Pred_name]).agg('count').unstack(level=1)
 		summary_df_proba.columns = summary_df_proba.columns.droplevel()
@@ -683,7 +683,7 @@ def main():
 			out_scores.write("ID\t" + pd.DataFrame.to_csv(df_proba[["Class",
 				"Mean", "Median", "stdev",Pred_name]], sep="\t").strip() + "\n")
 		else:
-			out_scores.write("ID\t" + pd.DataFrame.to_csv(df_proba, 
+			out_scores.write("ID\t" + pd.DataFrame.to_csv(df_proba,
 				sep="\t").strip() + "\n")
 		out_scores.close()
 
@@ -746,7 +746,7 @@ def main():
 			Pr_test, Ac_test, F1_test, '\t'.join(str(x) for x in ROC_test),
 			'\t'.join(str(x) for x in PRc_test)))
 
-		# Save detailed results file 
+		# Save detailed results file
 		with open(args.save + "_results.txt", 'w') as out:
 			out.write('%s\nID: %s\nTag: %s\nAlgorithm: %s\nTrained on classes: '
 				'%s\nApplied to: %s\nNumber of features: %i\n' % (

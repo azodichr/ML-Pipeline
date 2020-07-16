@@ -2,7 +2,7 @@ import sys, os, argparse
 import pandas as pd
 import numpy as np
 from scipy import stats
-from sklearn.preprocessing import Imputer
+from sklearn.impute import SimpleImputer
 
 
 ###### Parse input parameters #######
@@ -17,11 +17,11 @@ parser = argparse.ArgumentParser(
 
 # Info about input data
 parser.add_argument(
-	'-df', 
+	'-df',
 	help='Feature & class dataframe. Must be specified',
 	required=True)
 parser.add_argument(
-	'-y_name', 
+	'-y_name',
 	help='Name of lable column in dataframe, default=Class',
 	default='Class')
 parser.add_argument(
@@ -31,45 +31,46 @@ parser.add_argument(
 
 # Imputation parameters
 parser.add_argument(
-	'-na_method', 
+	'-na_method',
 	help='Mode for inputation (options: drop, mean, median, mode). Will '+\
 		'default to mode if feature is categorical (i.e. a string), '+\
 		'otherwise default=median',
 	default='median')
 parser.add_argument( #### Shiu: this is ambiguous, should be -drop_proportion
-	'-drop_percent', 
+	'-drop_percent',
 	help='If > drop_percent of data is missing, feature will be dropped '+\
-		'instead of imputed, default=0.5', 
+		'instead of imputed, default=0.5',
 	default=0.5)
 
 # One-Hot-Encoding Parameters
 parser.add_argument(
-	'-onehot', 
+	'-onehot',
 	help='t/f. If onehot encoding should be done if a column contains '+\
-		'strings, default = t', 
+		'strings, default = t',
 	default='t')
 parser.add_argument(
-	'-onehot_list', 
+	'-onehot_list',
 	help='list of columns to be one-hot-encoded (will default to default to '+\
 		'any column of type object - i.e. strings)',
 	default='default')
 
 # Other parameters
 parser.add_argument(
-	'-remove_dups', 
+	'-remove_dups',
 	help='t/f. Removes rows with duplicate row names (1st column value),' +\
 		'default=t',
 	default='t')
 parser.add_argument(
-	'-keep', 
+	'-keep',
 	help='List of column names to keep, drop the rest (except index and '+\
 		'y_name) - note this can be done in ML_classification/ML_regression, '+\
-		'default="na"', 
+		'default="na"',
 	default='na')
 parser.add_argument(
-	'-drop', 
-	help='List of column names to drop, default="na"', 
+	'-drop',
+	help='List of column names to drop, default="na"',
 	default='na')
+
 
 if len(sys.argv) == 1:
 	parser.print_help()
@@ -90,7 +91,7 @@ try:
 except KeyError:
 	print("\nERR: y_name is specified as %s: does not exist\n" % args.y_name)
 	sys.exit(0)
-	
+
 df = df.drop(args.y_name, 1)
 
 ###### Remove NAs with too much data missing or if na_method = 0 #######
@@ -128,7 +129,7 @@ if len(dropped) > 0:
 cols_to_impute = [x for x in cols_with_na if x not in dropped]
 print('Number of columns to impute: %i' % len(cols_to_impute))
 
-###### Impute remaining NAs ####### 
+###### Impute remaining NAs #######
 
 if len(cols_to_impute) > 0 and args.na_method != 'drop':
 	for col in cols_to_impute:
@@ -147,7 +148,7 @@ if len(cols_to_impute) > 0 and args.na_method != 'drop':
 			print('Need to specify method for imputation')
 			quit()
 
-###### One-Hot-Encode any categorical features ####### 
+###### One-Hot-Encode any categorical features #######
 
 if args.onehot.lower() == 't':
 	print('\n\n### One Hot Encoding... ###')
