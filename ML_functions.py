@@ -688,11 +688,11 @@ class fun(object):
 			TPR = []
 			precis = []
 			name = 'score_' + str(i)
-			y = df_proba.iloc[balanced_ids[i], 'Class']
+			y = df_proba.loc[balanced_ids[i], 'Class']
 
 			# Get decision matrix & scores at each threshold between 0 & 1
 			for j in np.arange(0, 1, 0.01):
-				yhat = df_proba.iloc[balanced_ids[i], name].copy()
+				yhat = df_proba.loc[balanced_ids[i], name].copy()
 				yhat[df_proba[name] >= j] = POS
 				yhat[df_proba[name] < j] = NEG
 				matrix = confusion_matrix(y, yhat, labels=[POS, NEG])
