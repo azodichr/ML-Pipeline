@@ -176,7 +176,7 @@ def main():
 	# Normalize data frame for SVM algorithms
 	if (args.alg.lower() in ["svm", "svmpoly", "svmrbf"] or
 		args.x_norm.lower() in ['t', 'true']):
-		if args.x_norm.lower != 'force_false':
+		if args.x_norm.lower() != 'force_false':
 			from sklearn import preprocessing
 			y = df['Class']
 			X = df.drop(['Class'], axis=1)
