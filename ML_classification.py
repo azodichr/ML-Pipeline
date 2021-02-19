@@ -172,6 +172,12 @@ def main():
 			print('There are Na values in your dataframe.\n '
 				'Impute them or add -drop_na True to remove rows with nas')
 			quit()
+			
+	# convert all features to numeric to avoid error later
+	df_class1= df.loc[:,'Class']
+	df1= df.iloc[:, 2:]
+	df1 = df1.apply(pd.to_numeric)
+	df = pd.concat([df_class1, df1], axis=1, join='inner')
 
 	# Normalize data frame for SVM algorithms
 	if (args.alg.lower() in ["svm", "svmpoly", "svmrbf"] or
