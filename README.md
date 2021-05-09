@@ -121,7 +121,13 @@ The trained model is now saved using joblib's dump function. `joblib` is now an 
 
 
 ## TO DO LIST
-- Add additional classification models: Naive Bayes, basic neural network (1-2 layers)
-- Look into using MCC as a performance metric - would be useful for selecting the threshold since it doesn't depend on the ratio of +/- instances (https://en.wikipedia.org/wiki/Matthews_correlation_coefficient)
-- Incorporate PCA summary features into pre-processing script
+
+Major:
+    - Implement feature selection during the training step
+
+Minor 
+    - Allow user to set custom seed
+    - Add additional classification models: Naive Bayes, basic neural network (1-2 layers)
+    - Look into using MCC as a performance metric - would be useful for selecting the threshold since it doesn't depend on the ratio of +/- instances (https://en.wikipedia.org/wiki/Matthews_correlation_coefficient)
+    - Incorporate PCA summary features into pre-processing script
 
