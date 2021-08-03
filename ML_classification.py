@@ -104,7 +104,7 @@ def main():
 	params_group.add_argument('-lr', '-learning_rate', help='GB parameter. '
 		'Grid Search [0.001, 0.01, 0.1, 0.5, 1]', type=float, default=0.1)
 	params_group.add_argument('-kernel', help='SVM parameter - not in grid '
-		'search use -alg SVM, SVMrbf, or SVMpoly')
+		'search use -alg SVM, SVMrbf, or SVMpoly', default="poly")
 	params_group.add_argument('-C', help='SVM/LogReg parameter. Grid Search '
 		'[0.001, 0.01, 0.1, 0.5, 1, 10, 50]', type=float, default=1.0)
 	params_group.add_argument('-gamma', help='SVMrbf/SVMpoly parameter. Grid '
@@ -302,14 +302,14 @@ def main():
 			print("Parameters selected: Kernel=Linear, C=%s" % (str(args.C)))
 
 		elif args.alg.lower() == "svmpoly":
-			args.C, args.degree, args.gamma, kernel = params2use
+			args.C, args.degree, args.gamma, args.kernel = params2use
 			print("Parameters selected: Kernel=%s, C=%s, degree=%s, gamma=%s" %
-				(str(kernel), str(args.C), str(args.degree), str(args.gamma)))
+				(str(args.kernel), str(args.C), str(args.degree), str(args.gamma)))
 
 		elif args.alg.lower() == "svmrbf":
-			args.C, args.gamma, kernel = params2use
+			args.C, args.gamma, args.kernel = params2use
 			print("Parameters selected: Kernel=%s, C=%s, gamma=%s" %
-				(str(kernel), str(args.C), str(args.gamma)))
+				(str(args.kernel), str(args.C), str(args.gamma)))
 
 		elif args.alg.lower() == "logreg":
 			args.C, args.intercept_scaling, args.penalty = params2use
@@ -381,8 +381,8 @@ def main():
 			parameters_used = [args.C]
 			clf = ML.fun.DefineClf_LinearSVM(args.C, j)
 		elif args.alg.lower() == 'svmrbf' or args.alg.lower() == 'svmpoly':
-			parameters_used = [args.C, args.degree, args.gamma, kernel]
-			clf = ML.fun.DefineClf_SVM(kernel, args.C, args.degree,
+			parameters_used = [args.C, args.degree, args.gamma, args.kernel]
+			clf = ML.fun.DefineClf_SVM(args.kernel, args.C, args.degree,
 				args.gamma, j)
 		elif args.alg.lower() == "logreg":
 			parameters_used = [args.C, args.intercept_scaling, args.penalty]
