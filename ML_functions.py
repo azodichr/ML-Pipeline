@@ -469,7 +469,7 @@ class fun(object):
 	def Run_Regression_Model(df, reg, cv_num, ALG, df_unknowns, test_df,
 		cv_sets, j, save):
 		from sklearn.model_selection import cross_val_predict
-		from sklearn.metrics.scorer import make_scorer
+		from sklearn.metrics import make_scorer
 		from sklearn.metrics import mean_squared_error, r2_score
 		from sklearn.metrics import explained_variance_score
 		# Data from balanced dataframe
