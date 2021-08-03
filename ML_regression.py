@@ -253,7 +253,6 @@ def main():
 	print(df.iloc[:5, :5])
 	print(f'\nNumber of features: {len(df.columns.values.tolist())-1}')
 
-
 	n_features = len(list(df)) - 1
 
 	####### Run parameter sweep using a grid search #######
