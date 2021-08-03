@@ -2,7 +2,6 @@ import sys, os, argparse
 import pandas as pd
 import numpy as np
 from scipy import stats
-from sklearn.impute import SimpleImputer
 
 
 ###### Parse input parameters #######
@@ -80,6 +79,7 @@ args = parser.parse_args()
 ###### Read in data #######
 
 df = pd.read_csv(args.df, sep=args.sep, index_col=0)
+
 df = df.replace(['?', 'NA', 'na', 'n/a', '', '.'], np.nan)
 
 print('Snapshot of input data...')

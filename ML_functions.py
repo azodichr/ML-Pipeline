@@ -469,7 +469,7 @@ class fun(object):
 	def Run_Regression_Model(df, reg, cv_num, ALG, df_unknowns, test_df,
 		cv_sets, j, save):
 		from sklearn.model_selection import cross_val_predict
-		from sklearn.metrics.scorer import make_scorer
+		from sklearn.metrics import make_scorer
 		from sklearn.metrics import mean_squared_error, r2_score
 		from sklearn.metrics import explained_variance_score
 		# Data from balanced dataframe
@@ -479,10 +479,10 @@ class fun(object):
 		# Obtain the predictions using 10 fold cross validation
 		# (uses KFold cv by default):
 		if isinstance(cv_sets, pd.DataFrame):
-			from sklearn.cross_validation import LeaveOneLabelOut
-			cv_folds = LeaveOneLabelOut(cv_sets.iloc[:, j])
+			from sklearn.model_selection import LeaveOneGroupOut
+			cv_split = LeaveOneGroupOut()
+			cv_folds = cv_split.split(X, y, cv_sets.iloc[:, j])
 			cv_pred = cross_val_predict(estimator=reg, X=X, y=y, cv=cv_folds)
-
 		else:
 			cv_pred = cross_val_predict(estimator=reg, X=X, y=y, cv=cv_num)
 
