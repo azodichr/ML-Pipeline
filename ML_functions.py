@@ -354,8 +354,46 @@ class fun(object):
 		reg = linear_model.LinearRegression()
 		return reg
 
+
+	def Extract_Importance_Scores(model, imp_method, df, target, score, cv_num):
+		
+		if imp_method.lower() == "lofo":
+			from lofo import LOFOImportance, FLOFOImportance, Dataset
+			from sklearn.model_selection import KFold
+			print("lofo: https://github.com/aerdem4/lofo-importance")
+		
+			# Set up input data
+			features = list(df.columns)
+			features.remove(target)
+			
+			val1 = df[target].values[0]
+			df[target] = pd.Series(np.where(df[target].values == val1, 1, 0), df.index)
+			
+			cv = KFold(n_splits=cv_num, shuffle=True)
+			dataset = Dataset(df, target=target, features=features)
+			
+			# Calculate and report mean
+			lofo_imp = LOFOImportance(dataset, cv=cv, scoring=score.lower(), model=model)
+			importance_df = lofo_imp.get_importance()
+			importances = [importance_df.importance_mean.values]
+
+		elif imp_method.lower() == "pass":
+			importances = "na"
+		else:
+			try:
+				importances = model.feature_importances_  # default sklearn scores
+			except:
+				try:
+					importances = model.coef_  # coefficients for SVM
+				except:
+					importances = "na"
+					print("Cannot get importance scores")
+
+		return importances
+
 	def BuildModel_Apply_Performance(df, clf, cv_num, df_notSel, apply_unk,
-		df_unknowns, test_df, classes, POS, NEG, j, ALG, THRSHD_test, save):
+		df_unknowns, test_df, classes, POS, NEG, j, ALG, THRSHD_test, save, 
+		imp_method):
 		from sklearn.model_selection import cross_val_predict
 
 		# Data from balanced dataframe
@@ -408,7 +446,7 @@ class fun(object):
 
 			# Generate run statistics from balanced dataset scores
 			result = fun.Performance(y, cv_pred, scores, clf, clf2, classes,
-				POS, POS_IND, NEG, ALG, THRSHD_test)
+				POS, POS_IND, NEG, ALG, THRSHD_test, imp_method, df, cv_num)
 
 			#Generate data frame with all scores
 			score_columns=["score_%s"%(j)]
@@ -431,7 +469,7 @@ class fun(object):
 				scores_test = test_proba[:,POS_IND]
 				result_test = fun.Performance(test_df['Class'], test_pred,
 					scores_test, clf, clf2, classes, POS, POS_IND, NEG, ALG,
-					THRSHD_test)
+					THRSHD_test, "pass", df, cv_num)
 
 		else:
 			# Generate run statistics from balanced dataset scores
@@ -467,7 +505,7 @@ class fun(object):
 			return result,current_scores
 
 	def Run_Regression_Model(df, reg, cv_num, ALG, df_unknowns, test_df,
-		cv_sets, j, save):
+		cv_sets, j, save, imp_method):
 		from sklearn.model_selection import cross_val_predict
 		from sklearn.metrics import make_scorer
 		from sklearn.metrics import mean_squared_error, r2_score
@@ -524,15 +562,7 @@ class fun(object):
 			cor_test = np.corrcoef(np.array(test_y), test_pred)
 			result_test = [mse_test, evs_test, r2_test, cor_test[0, 1]]
 
-		# Try to extract importance scores
-		try:
-			importances = reg.feature_importances_
-		except:
-			try:
-				importances = reg.coef_
-			except:
-				importances = "na"
-				print("Cannot get importance scores")
+		importances = fun.Extract_Importance_Scores(reg, imp_method, df, "Y", "mse", cv_num)
 
 		if not isinstance(test_df, str):
 			return result, cv_pred_df, importances, result_test, reg
@@ -540,7 +570,7 @@ class fun(object):
 			return result, cv_pred_df, importances, reg
 
 	def Performance(y, cv_pred, scores, clf, clf2, classes, POS, POS_IND,
-		NEG, ALG, THRSHD_test):
+		NEG, ALG, THRSHD_test, imp_method, df, cv_num):
 		""" For binary predictions: This function calculates the best threshold
 		for defining POS/NEG from the prediction probabilities by maximizing
 		the f1_score. Then calcuates the area under the ROC and PRc
@@ -583,17 +613,10 @@ class fun(object):
 		AucRoc = roc_auc_score(y1, scores)
 		AucPRc = average_precision_score(y1, scores)
 
-		# Try to extract importance scores
 		if clf2 != 'pass':
 			clf = clf2
-		try:
-			importances = clf.feature_importances_
-		except:
-			try:
-				importances = clf.coef_
-			except:
-				importances = "na"
-				print("Cannot get importance scores")
+		
+		importances = fun.Extract_Importance_Scores(clf, imp_method, df, "Class", THRSHD_test, cv_num)
 
 		return {'cm': cm, 'threshold': max_f1_thresh, 'AucPRc': AucPRc,
 			'AucRoc': AucRoc, 'MaxF1': max_f1, 'importances': importances}

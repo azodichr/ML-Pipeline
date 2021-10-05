@@ -66,6 +66,8 @@ def main():
 		type=int, default=10)
 	pipln_group.add_argument('-cv_sets', help='File with defined cross '
 		'validation folds', default='none')
+	pipln_group.add_argument('-imp_method', help='Method for feature importance '
+		'scores. Options: default, lofo', default='default')
 
 	# Interpretation
 	interp_group = parser.add_argument_group(title='CONTROL INTERPRETATION BEHAVIOR')
@@ -339,12 +341,12 @@ def main():
 		if args.test != '':
 			result, cv_pred, importance, result_test, model = ML.fun.Run_Regression_Model(
 				df, reg, args.cv_num, args.alg, df_unknowns, test_df,
-				args.cv_sets, j, args.save)
+				args.cv_sets, j, args.save, args.imp_method)
 			results_test.append(result_test)
 		else:
 			result, cv_pred, importance, model = ML.fun.Run_Regression_Model(
 				df, reg, args.cv_num, args.alg, df_unknowns,
-				test_df, args.cv_sets, j, args.save)
+				test_df, args.cv_sets, j, args.save, args.imp_method)
 
 		results.append(result)
 		predictions[rep_name] = cv_pred

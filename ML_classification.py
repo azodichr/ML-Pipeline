@@ -65,6 +65,8 @@ def main():
 		type=int, default=10)
 	pipln_group.add_argument('-min_size', help='Number instances to downsample '
 		'to (default = # instances from smallest class', default='')
+	pipln_group.add_argument('-imp_method', help='Method for feature importance '
+		'scores. Options: default, lofo', default='default')
 
 	# Grid Search Method
 	gs_group = parser.add_argument_group(title='CONTROL GRID SEARCH BEHAVIOR')
@@ -401,12 +403,14 @@ def main():
 			result, current_scores, result_test = \
 				ML.fun.BuildModel_Apply_Performance(df1, clf, args.cv_num,
 					df_notSel, apply_unk, df_unknowns, test_df, classes,
-					args.pos, NEG, j, args.alg, args.threshold_test, args.save)
+					args.pos, NEG, j, args.alg, args.threshold_test, args.save,
+					args.imp_method)
 			results_test.append(result_test)
 		else:
 			result, current_scores = ML.fun.BuildModel_Apply_Performance(df1,
 				clf, args.cv_num, df_notSel, apply_unk, df_unknowns, test_df,
-				classes, args.pos, NEG, j, args.alg, args.threshold_test, args.save)
+				classes, args.pos, NEG, j, args.alg, args.threshold_test, args.save,
+				args.imp_method)
 
 		results.append(result)
 		try:

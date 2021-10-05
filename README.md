@@ -66,25 +66,25 @@ python ML_preprocess.py -df data.txt -na_method median -onehot t -
 ### 2. Define a testing set (test_set.py)
 
 ```
-python test_set.py -df data_mod.txt -use 1,0 -type c -p 0.1 -save test_instances.txt
+python test_set.py -df data_mod.txt -use gen,special -type c -p 0.1 -save test_instances.txt
 ```
 
 ### 3. Select the best subset of features to use as predictors (Feature_Selection.py)
 
 ```
-python Feature_Selection.py -df data_mod.txt -cl_train 1,0 -type c -alg lasso -p 0.01 -save top_feat_lasso.txt
+python Feature_Selection.py -df data_mod.txt -cl_train gen,special -type c -alg lasso -p 0.01 -save top_feat_lasso.txt
 ```
 
 ### 4. Train and apply a classification (ML_classification.py) or regression (ML_regression.py) machine learning model
 
 Example using the data shown above:
 ```
-python ML_classification.py -df data_mod.txt -test test_instances.txt -cl_train 1,0 -alg SVM -apply unknown
+python ML_classification.py -df data_mod.txt -test test_instances.txt -cl_train gen,special -alg SVM -apply unknown
 ```
 
 Example of a multiclass prediction where classes are A, B, and C:
 ```
-python ML_classification.py -df data_mod.txt -test test_instances.txt -cl_train A,B,C -alg SVM -apply unknown
+python ML_classification.py -df data_mod.txt -test test_instances.txt -cl_train gen,special,unknown -alg SVM 
 ```
 
 Example of a regression prediction (e.g. predicting plant height in meters):
